@@ -5,7 +5,7 @@ class GatewayConnection {
     var $port = 22;
 
     function __construct() {
-        $this->conn = ssh2_connect($this-get_ipv4_gateway(), 
+        $this->conn = ssh2_connect($this->get_ipv4_gateway(),
                                    $this->port, 
                                    array('hostkey'=>'ssh-rsa'));
         
