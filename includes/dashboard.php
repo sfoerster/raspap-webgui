@@ -20,7 +20,9 @@ function DisplayDashboard()
         return;
     }
 
-    exec('ip a show '.RASPI_WIFI_CLIENT_INTERFACE, $stdoutIp);
+    //exec('ip a show '.RASPI_WIFI_CLIENT_INTERFACE, $stdoutIp);
+    $GLOBALS['gwconn']->run_cmd_gateway('ip a show '.RASPI_WIFI_CLIENT_INTERFACE, $stdoutIp);
+    //exec('ip a show '.RASPI_WIFI_CLIENT_INTERFACE, $stdoutIp);
     $stdoutIpAllLinesGlued = implode(" ", $stdoutIp);
     $stdoutIpWRepeatedSpaces = preg_replace('/\s\s+/', ' ', $stdoutIpAllLinesGlued);
 

@@ -40,6 +40,8 @@ include_once('includes/about.php');
 include_once('includes/openvpn.php');
 include_once('includes/torproxy.php');
 
+$gwconn = new GatewayConnection();
+
 $output = $return = 0;
 $page = $_GET['page'];
 
