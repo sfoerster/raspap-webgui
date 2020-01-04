@@ -15,7 +15,7 @@ class GatewayConnection {
 
             echo "SSH authentication successful\n";
         } else {
-            die('SSH authentication failed\n');
+            die("SSH authentication failed\nGateway: ".$this->get_ipv4_gateway()."\nUser: ".$this->get_user_host()[0]);
         }
     }
 
