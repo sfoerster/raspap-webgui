@@ -46,7 +46,11 @@ class GatewayConnection {
         return ssh2_exec($this->conn, $cmd);
     }
 
-    function run_exec_gateway($cmd, &$out=[]) {
+    function run_exec_gateway($cmd, &$out) {
+        // initialize out and err
+        if (is_null($out)) {
+            $out = [];
+        }
         $err = [];
 
         $stream = ssh2_exec($this->conn, $cmd);
