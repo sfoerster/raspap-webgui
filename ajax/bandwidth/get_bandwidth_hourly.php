@@ -1,6 +1,8 @@
 <?php 
 
 require('../../includes/csrf.php');
+include_once('../../includes/functions.php');
+
 
 if (filter_input(INPUT_GET, 'tu') == 'h') {
 
@@ -37,7 +39,8 @@ if (filter_input(INPUT_GET, 'tu') == 'h') {
 
 
 
-	exec(sprintf('vnstat -i %s --json h', escapeshellarg($interface)), $jsonstdoutvnstat, $exitcodedaily);
+    $gwconn = new GatewayConnection();
+	$gwconn->run_exec_gateway(sprintf('vnstat -i %s --json h', escapeshellarg($interface)), $jsonstdoutvnstat, $exitcodedaily);
 	if ($exitcodedaily !== 0) {
 		exit('vnstat error');
 	}

@@ -8,12 +8,14 @@ require_once RASPI_CONFIG.'/raspap.php';
 header('X-Frame-Options: DENY');
 header("Content-Security-Policy: default-src 'none'; connect-src 'self'");
 require_once '../../includes/authenticate.php';
+include_once('../../includes/functions.php');
 
+$gwconn = new GatewayConnection();
 
 $interface = filter_input(INPUT_GET, 'inet', FILTER_SANITIZE_SPECIAL_CHARS);
 if (empty($interface)) {
     // Use first interface if inet parameter not provided.
-    $GLOBALS["gwconn"]->run_exec_gateway("ip -o link show | awk -F ': ' '{print $2}' | grep -v lo ", $interfacesWlo);
+    $gwconn->run_exec_gateway("ip -o link show | awk -F ': ' '{print $2}' | grep -v lo ", $interfacesWlo);
     if (count($interfacesWlo) > 0) {
         $interface = $interfacesWlo[0];
     } else {
@@ -30,7 +32,7 @@ if (strlen($interface) > IFNAMSIZ) {
 
 require_once './get_bandwidth_hourly.php';
 
-$GLOBALS["gwconn"]->run_exec_gateway(sprintf('vnstat -i %s --json ', escapeshellarg($interface)), $jsonstdoutvnstat,
+$gwconn->run_exec_gateway(sprintf('vnstat -i %s --json ', escapeshellarg($interface)), $jsonstdoutvnstat,
      $exitcodedaily);
 if ($exitcodedaily !== 0) {
   exit('vnstat error');
