@@ -45,6 +45,37 @@ class GatewayConnection {
     function run_cmd_gateway($cmd) {
         return ssh2_exec($this->conn, $cmd);
     }
+
+    function run_exec_gateway($cmd, &$out=[]) {
+        $err = []
+
+        $stream = ssh2_exec($this->conn, $cmd);
+        $errorStream = ssh2_fetch_stream($stream, SSH2_STREAM_STDERR);
+
+        // Enable blocking for both streams
+        stream_set_blocking($errorStream, true);
+        stream_set_blocking($stream, true);
+
+        while($line = fgets($stream)) {
+            flush();
+            array_push($out, $line);
+        }
+
+        while($errline = fgets($errorStream)) {
+            flush();
+            array_push($err, $errline);
+        }
+        
+        // Whichever of the two below commands is listed first will receive its appropriate output.  The second command receives nothing
+        // echo "Output: " . stream_get_contents($stream);
+        // echo "Error: " . stream_get_contents($errorStream);
+
+        // Close the streams
+        fclose($errorStream);
+        fclose($stream);
+
+        return $err
+    }
 }
 
 ?>
