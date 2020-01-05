@@ -64,7 +64,7 @@ class GatewayConnection {
         return $out;
     }
 
-    function run_exec_gateway($cmd, &$out, &$ret=1) {
+    function run_exec_gateway($cmd, &$out=[], &$ret=1) {
         // initialize out and err
         if (is_null($out)) {
             $out = [];
