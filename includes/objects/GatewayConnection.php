@@ -42,8 +42,26 @@ class GatewayConnection {
         return explode("/", $ip_sub);
     }
 
-    function run_cmd_gateway($cmd) {
-        return ssh2_exec($this->conn, $cmd);
+    function run_shell_gateway($cmd) {
+        // initialize out
+        $out = '';
+
+        // set the stream
+        $stream = ssh2_exec($this->conn, $cmd);
+        
+        // enabling blocking
+        stream_set_blocking($stream, true);
+        
+        // iterate through the stream
+        while($line = fgets($stream)) {
+            flush();
+            $out += trim(preg_replace('/\s+/', ' ', $line));
+        }
+        
+        // close the stream
+        fclose($stream);
+
+        return $out;
     }
 
     function run_exec_gateway($cmd, &$out, &$ret) {
@@ -60,14 +78,15 @@ class GatewayConnection {
         stream_set_blocking($errorStream, true);
         stream_set_blocking($stream, true);
 
+        // iterate through the streams
         while($line = fgets($stream)) {
             flush();
-            array_push($out, $line);
+            array_push($out, trim(preg_replace('/\s+/', ' ', $line)));
         }
 
         while($errline = fgets($errorStream)) {
             flush();
-            array_push($err, $errline);
+            array_push($err, trim(preg_replace('/\s+/', ' ', $errline)));
         }
         
         // Whichever of the two below commands is listed first will receive its appropriate output.  The second command receives nothing

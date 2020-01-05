@@ -121,11 +121,11 @@ function DisplaySystem()
 
     if (isset($_POST['system_reboot'])) {
         $status->addMessage("System Rebooting Now!", "warning", false);
-        $result = shell_exec("sudo /sbin/reboot");
+        $result = $GLOBALS["gwconn"]->run_shell_gateway("sudo /sbin/reboot");
     }
     if (isset($_POST['system_shutdown'])) {
         $status->addMessage("System Shutting Down Now!", "warning", false);
-        $result = shell_exec("sudo /sbin/shutdown -h now");
+        $result = $GLOBALS["gwconn"]->run_shell_gateway("sudo /sbin/shutdown -h now");
     }
 
     echo renderTemplate("system", compact("arrLocales", "status", "system", "ServerPort"));

@@ -2,7 +2,7 @@
 
 class System {
   public function hostname() {
-    return shell_exec("hostname -f");
+    return $GLOBALS["gwconn"]->run_shell_gateway("hostname -f");
   }
 
   public function uptime() {
@@ -28,12 +28,12 @@ class System {
   }
 
   public function usedMemory() {
-    $used = shell_exec("free -m | awk '/Mem:/ { total=$2 ; used=$3 } END { print used/total*100}'");
+    $used = $GLOBALS["gwconn"]->run_shell_gateway("free -m | awk '/Mem:/ { total=$2 ; used=$3 } END { print used/total*100}'");
     return floor($used);
   }
 
   public function processorCount() {
-    $procs = shell_exec("nproc --all");
+    $procs = $GLOBALS["gwconn"]->run_shell_gateway("nproc --all");
     return intval($proc);
   }
 
