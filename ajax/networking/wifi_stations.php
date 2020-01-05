@@ -8,6 +8,7 @@ include_once('../../includes/wifi_functions.php');
 $networks = [];
 $network  = null;
 $ssid     = null;
+$gwconn = new GatewayConnection();
 
 knownWifiStations($networks);
 nearbyWifiStations($networks, !isset($_REQUEST["refresh"]));
