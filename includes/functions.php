@@ -2,7 +2,7 @@
 
 /* class autoload */
 spl_autoload_register(function ($class_name) {
-    include "includes/objects/$class_name.php";
+    include "/var/www/html/includes/objects/$class_name.php";
 });
 
 /* Functions for Networking */
