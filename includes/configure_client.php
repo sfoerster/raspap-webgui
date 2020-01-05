@@ -16,7 +16,7 @@ function DisplayWPAConfig()
 
     if (isset($_POST['connect'])) {
         $result = 0;
-        exec('sudo wpa_cli -i ' . RASPI_WPA_CTRL_INTERFACE . ' select_network '.strval($_POST['connect']));
+        $GLOBALS["gwconn"]->run_exec_gateway('sudo wpa_cli -i ' . RASPI_WPA_CTRL_INTERFACE . ' select_network '.strval($_POST['connect']));
     } elseif (isset($_POST['client_settings'])) {
         $tmp_networks = $networks;
         if ($wpa_file = fopen('/tmp/wifidata', 'w')) {
@@ -54,7 +54,7 @@ function DisplayWPAConfig()
                     if (strlen($network['passphrase']) >=8 && strlen($network['passphrase']) <= 63) {
                         unset($wpa_passphrase);
                         unset($line);
-                        exec('wpa_passphrase '.escapeshellarg($ssid). ' ' . escapeshellarg($network['passphrase']), $wpa_passphrase);
+                        $GLOBALS["gwconn"]->run_exec_gateway('wpa_passphrase '.escapeshellarg($ssid). ' ' . escapeshellarg($network['passphrase']), $wpa_passphrase);
                         foreach ($wpa_passphrase as $line) {
                             if (preg_match('/^\s*}\s*$/', $line)) {
                                 if (array_key_exists('priority', $network)) {
@@ -75,7 +75,7 @@ function DisplayWPAConfig()
             if ($ok) {
                 system('sudo cp /tmp/wifidata ' . RASPI_WPA_SUPPLICANT_CONFIG, $returnval);
                 if ($returnval == 0) {
-                    exec('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' reconfigure', $reconfigure_out, $reconfigure_return);
+                    $GLOBALS["gwconn"]->run_exec_gateway('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' reconfigure', $reconfigure_out, $reconfigure_return);
                     if ($reconfigure_return == 0) {
                         $status->addMessage('Wifi settings updated successfully', 'success');
                         $networks = $tmp_networks;

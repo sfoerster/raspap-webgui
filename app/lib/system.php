@@ -6,7 +6,7 @@ class System {
   }
 
   public function uptime() {
-    $uparray = explode(" ", exec("cat /proc/uptime"));
+    $uparray = explode(" ", $GLOBALS["gwconn"]->run_exec_gateway("cat /proc/uptime"));
     $seconds = round($uparray[0], 0);
     $minutes = $seconds / 60;
     $hours   = $minutes / 60;
@@ -38,7 +38,7 @@ class System {
   }
 
   public function loadAvg1Min() {
-    $load = exec("awk '{print $1}' /proc/loadavg");
+    $load = $GLOBALS["gwconn"]->run_exec_gateway("awk '{print $1}' /proc/loadavg");
     return floatval($load);
   }
 

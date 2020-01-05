@@ -5,7 +5,7 @@ include_once('functions.php');
 function knownWifiStations(&$networks)
 {
     // Find currently configured networks
-    exec(' sudo cat ' . RASPI_WPA_SUPPLICANT_CONFIG, $known_return);
+    $GLOBALS["gwconn"]->run_exec_gateway(' sudo cat ' . RASPI_WPA_SUPPLICANT_CONFIG, $known_return);
     foreach ($known_return as $line) {
         if (preg_match('/network\s*=/', $line)) {
             $network = array('visible' => false, 'configured' => true, 'connected' => false);
@@ -52,10 +52,10 @@ function nearbyWifiStations(&$networks, $cached = true)
     }
 
     $scan_results = cache($cacheKey, function () {
-        exec('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' scan');
+        $GLOBALS["gwconn"]->run_exec_gateway('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' scan');
         sleep(3);
 
-        exec('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' scan_results', $stdout);
+        $GLOBALS["gwconn"]->run_exec_gateway('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' scan_results', $stdout);
         array_shift($stdout);
 
         return implode("\n", $stdout);
@@ -89,7 +89,7 @@ function nearbyWifiStations(&$networks, $cached = true)
 
 function connectedWifiStations(&$networks)
 {
-    exec('iwconfig ' . RASPI_WIFI_CLIENT_INTERFACE, $iwconfig_return);
+    $GLOBALS["gwconn"]->run_exec_gateway('iwconfig ' . RASPI_WIFI_CLIENT_INTERFACE, $iwconfig_return);
     foreach ($iwconfig_return as $line) {
         if (preg_match('/ESSID:\"([^"]+)\"/i', $line, $iwconfig_ssid)) {
             $networks[$iwconfig_ssid[1]]['connected'] = true;

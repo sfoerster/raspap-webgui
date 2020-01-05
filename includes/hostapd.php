@@ -20,31 +20,31 @@ function DisplayHostAPDConfig()
     $arrSecurity = array(1 => 'WPA', 2 => 'WPA2', 3 => 'WPA+WPA2', 'none' => _("None"));
     $arrEncType = array('TKIP' => 'TKIP', 'CCMP' => 'CCMP', 'TKIP CCMP' => 'TKIP+CCMP');
     $managedModeEnabled = false;
-    exec("ip -o link show | awk -F': ' '{print $2}'", $interfaces);
+    $GLOBALS["gwconn"]->run_exec_gateway("ip -o link show | awk -F': ' '{print $2}'", $interfaces);
 
     if (isset($_POST['SaveHostAPDSettings'])) {
         SaveHostAPDConfig($arrSecurity, $arrEncType, $arr80211Standard, $interfaces, $status);
     } elseif (isset($_POST['StartHotspot'])) {
         $status->addMessage('Attempting to start hotspot', 'info');
         if ($arrHostapdConf['WifiAPEnable'] == 1) {
-            exec('sudo /etc/raspap/hostapd/servicestart.sh --interface uap0 --seconds 3', $return);
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/servicestart.sh --interface uap0 --seconds 3', $return);
         } else {
-            exec('sudo /etc/raspap/hostapd/servicestart.sh --seconds 5', $return);
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/servicestart.sh --seconds 5', $return);
         }
         foreach ($return as $line) {
             $status->addMessage($line, 'info');
         }
     } elseif (isset($_POST['StopHotspot'])) {
         $status->addMessage('Attempting to stop hotspot', 'info');
-        exec('sudo /bin/systemctl stop hostapd.service', $return);
+        $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl stop hostapd.service', $return);
         foreach ($return as $line) {
             $status->addMessage($line, 'info');
         }
     }
 
-    exec('cat '. RASPI_HOSTAPD_CONFIG, $hostapdconfig);
-    exec('pidof hostapd | wc -l', $hostapdstatus);
-    exec('iwgetid '. RASPI_WIFI_CLIENT_INTERFACE. ' -r', $wifiNetworkID);
+    $GLOBALS["gwconn"]->run_exec_gateway('cat '. RASPI_HOSTAPD_CONFIG, $hostapdconfig);
+    $GLOBALS["gwconn"]->run_exec_gateway('pidof hostapd | wc -l', $hostapdstatus);
+    $GLOBALS["gwconn"]->run_exec_gateway('iwgetid '. RASPI_WIFI_CLIENT_INTERFACE. ' -r', $wifiNetworkID);
     if ( !empty($wifiNetworkID[0])) {
         $managedModeEnabled = true;
     }
@@ -117,16 +117,16 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
     if ($arrHostapdConf['LogEnable'] == 0) {
         if (isset($_POST['logEnable'])) {
             $logEnable = 1;
-            exec('sudo /etc/raspap/hostapd/enablelog.sh');
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/enablelog.sh');
         } else {
-            exec('sudo /etc/raspap/hostapd/disablelog.sh');
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/disablelog.sh');
         }
     } else {
         if (isset($_POST['logEnable'])) {
             $logEnable = 1;
-            exec('sudo /etc/raspap/hostapd/enablelog.sh');
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/enablelog.sh');
         } else {
-            exec('sudo /etc/raspap/hostapd/disablelog.sh');
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/disablelog.sh');
         }
     }
     $cfg = [];

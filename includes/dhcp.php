@@ -77,14 +77,14 @@ function DisplayDHCPConfig()
         }
     }
 
-    exec('pidof dnsmasq | wc -l', $dnsmasq);
+    $GLOBALS["gwconn"]->run_exec_gateway('pidof dnsmasq | wc -l', $dnsmasq);
     $dnsmasq_state = ($dnsmasq[0] > 0);
 
     if (isset($_POST['startdhcpd'])) {
         if ($dnsmasq_state) {
             $status->addMessage('dnsmasq already running', 'info');
         } else {
-            exec('sudo /bin/systemctl start dnsmasq.service', $dnsmasq, $return);
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl start dnsmasq.service', $dnsmasq, $return);
             if ($return == 0) {
                 $status->addMessage('Successfully started dnsmasq', 'success');
                 $dnsmasq_state = true;
@@ -94,7 +94,7 @@ function DisplayDHCPConfig()
         }
     } elseif (isset($_POST['stopdhcpd'])) {
         if ($dnsmasq_state) {
-            exec('sudo /bin/systemctl stop dnsmasq.service', $dnsmasq, $return);
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl stop dnsmasq.service', $dnsmasq, $return);
             if ($return == 0) {
                 $status->addMessage('Successfully stopped dnsmasq', 'success');
                 $dnsmasq_state = false;
@@ -108,7 +108,7 @@ function DisplayDHCPConfig()
 
     $serviceStatus = $dnsmasq_state ? "up" : "down";
 
-    exec('cat '. RASPI_DNSMASQ_CONFIG, $return);
+    $GLOBALS["gwconn"]->run_exec_gateway('cat '. RASPI_DNSMASQ_CONFIG, $return);
     $conf = ParseConfig($return);
     $arrRange = explode(",", $conf['dhcp-range']);
     $RangeStart = $arrRange[0];
@@ -154,8 +154,8 @@ function DisplayDHCPConfig()
         }
     }
 
-    exec("ip -o link show | awk -F': ' '{print $2}'", $interfaces);
-    exec('cat ' . RASPI_DNSMASQ_LEASES, $leases);
+    $GLOBALS["gwconn"]->run_exec_gateway("ip -o link show | awk -F': ' '{print $2}'", $interfaces);
+    $GLOBALS["gwconn"]->run_exec_gateway('cat ' . RASPI_DNSMASQ_LEASES, $leases);
 
     echo renderTemplate("dhcp", compact(
         "status",

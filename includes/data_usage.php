@@ -5,7 +5,7 @@
  */
 function DisplayDataUsage(&$extraFooterScripts)
 {
-    exec("ip -o link show | awk -F ': ' '{print $2}' | grep -v lo ", $interfacesWlo);
+    $GLOBALS["gwconn"]->run_exec_gateway("ip -o link show | awk -F ': ' '{print $2}' | grep -v lo ", $interfacesWlo);
     echo renderTemplate("data_usage", [ "interfaces" => $interfacesWlo ]);
 
     $extraFooterScripts[] = array('src'=>'dist/datatables/jquery.dataTables.min.js', 'defer'=>false);

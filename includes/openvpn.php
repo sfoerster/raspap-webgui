@@ -20,20 +20,20 @@ function DisplayOpenVPNConfig()
         $return = SaveOpenVPNConfig($status, $_FILES['customFile'], $authUser, $authPassword);
     } elseif (isset($_POST['StartOpenVPN'])) {
         $status->addMessage('Attempting to start OpenVPN', 'info');
-        exec('sudo /bin/systemctl start openvpn-client@client', $return);
+        $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl start openvpn-client@client', $return);
         foreach ($return as $line) {
             $status->addMessage($line, 'info');
         }
     } elseif (isset($_POST['StopOpenVPN'])) {
         $status->addMessage('Attempting to stop OpenVPN', 'info');
-        exec('sudo /bin/systemctl stop openvpn-client@client', $return);
+        $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl stop openvpn-client@client', $return);
         foreach ($return as $line) {
             $status->addMessage($line, 'info');
         }
     }
 
-    exec('pidof openvpn | wc -l', $openvpnstatus);
-    exec('wget https://ipinfo.io/ip -qO -', $return);
+    $GLOBALS["gwconn"]->run_exec_gateway('pidof openvpn | wc -l', $openvpnstatus);
+    $GLOBALS["gwconn"]->run_exec_gateway('wget https://ipinfo.io/ip -qO -', $return);
 
     $serviceStatus = $openvpnstatus[0] == 0 ? "down" : "up";
     $auth = file(RASPI_OPENVPN_CLIENT_LOGIN, FILE_IGNORE_NEW_LINES);
@@ -140,7 +140,7 @@ function SaveOpenVPNConfig($status, $file, $authUser, $authPassword)
         }
 
         // Set iptables rules and, optionally, auth-user-pass
-        exec("sudo /etc/raspap/openvpn/configauth.sh $tmp_ovpnclient $auth_flag " .RASPI_WIFI_CLIENT_INTERFACE, $return);
+        $GLOBALS["gwconn"]->run_exec_gateway("sudo /etc/raspap/openvpn/configauth.sh $tmp_ovpnclient $auth_flag " .RASPI_WIFI_CLIENT_INTERFACE, $return);
         foreach ($return as $line) {
             $status->addMessage($line, 'info');
         }

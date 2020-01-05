@@ -5,7 +5,7 @@ if ($arrHostapdConf['WifiAPEnable'] == 1) {
 } else {
     $client_iface = RASPI_WIFI_CLIENT_INTERFACE;
 }
-exec('cat '.RASPI_DNSMASQ_LEASES.'| grep -E $(arp -i '.$client_iface.' -n | grep -oE "(([0-9]|[a-f]|[A-F]){2}:){5}([0-9]|[a-f]|[A-F]){2}" | tr "\n" "\|" | sed "s/.$//")', $clients);
+$GLOBALS["gwconn"]->run_exec_gateway('cat '.RASPI_DNSMASQ_LEASES.'| grep -E $(arp -i '.$client_iface.' -n | grep -oE "(([0-9]|[a-f]|[A-F]){2}:){5}([0-9]|[a-f]|[A-F]){2}" | tr "\n" "\|" | sed "s/.$//")', $clients);
 $ifaceStatus = $wlan0up ? "up" : "down";
 ?>
 <div class="row">

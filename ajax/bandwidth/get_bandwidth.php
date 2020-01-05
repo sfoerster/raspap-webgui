@@ -13,7 +13,7 @@ require_once '../../includes/authenticate.php';
 $interface = filter_input(INPUT_GET, 'inet', FILTER_SANITIZE_SPECIAL_CHARS);
 if (empty($interface)) {
     // Use first interface if inet parameter not provided.
-    exec("ip -o link show | awk -F ': ' '{print $2}' | grep -v lo ", $interfacesWlo);
+    $GLOBALS["gwconn"]->run_exec_gateway("ip -o link show | awk -F ': ' '{print $2}' | grep -v lo ", $interfacesWlo);
     if (count($interfacesWlo) > 0) {
         $interface = $interfacesWlo[0];
     } else {
@@ -30,7 +30,7 @@ if (strlen($interface) > IFNAMSIZ) {
 
 require_once './get_bandwidth_hourly.php';
 
-exec(sprintf('vnstat -i %s --json ', escapeshellarg($interface)), $jsonstdoutvnstat,
+$GLOBALS["gwconn"]->run_exec_gateway(sprintf('vnstat -i %s --json ', escapeshellarg($interface)), $jsonstdoutvnstat,
      $exitcodedaily);
 if ($exitcodedaily !== 0) {
   exit('vnstat error');

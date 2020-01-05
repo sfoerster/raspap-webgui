@@ -11,10 +11,10 @@ function DisplayNetworkingConfig()
 
     $status = new StatusMessages();
 
-    exec("ls /sys/class/net | grep -v lo", $interfaces);
+    $GLOBALS["gwconn"]->run_exec_gateway("ls /sys/class/net | grep -v lo", $interfaces);
 
     foreach ($interfaces as $interface) {
-        exec("ip a show $interface", $$interface);
+        $GLOBALS["gwconn"]->run_exec_gateway("ip a show $interface", $$interface);
     }
     echo renderTemplate("networking", compact("status", "interfaces"));
 }

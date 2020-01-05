@@ -10,8 +10,8 @@ include_once('includes/status_messages.php');
 function DisplayTorProxyConfig()
 {
 
-    exec('cat '. RASPI_TORPROXY_CONFIG, $return);
-    exec('pidof tor | wc -l', $torproxystatus);
+    $GLOBALS["gwconn"]->run_exec_gateway('cat '. RASPI_TORPROXY_CONFIG, $return);
+    $GLOBALS["gwconn"]->run_exec_gateway('pidof tor | wc -l', $torproxystatus);
 
     $arrConfig = array();
     foreach ($return as $a) {
@@ -37,13 +37,13 @@ function SaveTORAndVPNConfig()
         // TODO
     } elseif (isset($_POST['StartTOR'])) {
         echo "Attempting to start TOR";
-        exec('sudo systemctl start tor.service', $return);
+        $GLOBALS["gwconn"]->run_exec_gateway('sudo systemctl start tor.service', $return);
         foreach ($return as $line) {
             $status->addMessage($line, 'info');
         }
     } elseif (isset($_POST['StopTOR'])) {
         echo "Attempting to stop TOR";
-        exec('sudo systemctl stop tor.service', $return);
+        $GLOBALS["gwconn"]->run_exec_gateway('sudo systemctl stop tor.service', $return);
         foreach ($return as $line) {
             $status->addMessage($line, 'info');
         }

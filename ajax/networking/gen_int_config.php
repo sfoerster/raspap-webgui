@@ -33,7 +33,7 @@ if (isset($_POST['generate'])) {
     }
 
     if (file_put_contents(RASPI_CONFIG_NETWORKING.'/dhcpcd.conf', $strConfFile)) {
-        exec('sudo /bin/cp /etc/raspap/networking/dhcpcd.conf /etc/dhcpcd.conf');
+        $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/cp /etc/raspap/networking/dhcpcd.conf /etc/dhcpcd.conf');
         $output = ['return'=>0,'output'=>'Settings successfully applied'];
     } else {
         $output = ['return'=>2,'output'=>'Unable to write to apply settings'];
