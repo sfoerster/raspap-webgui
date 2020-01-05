@@ -5,7 +5,6 @@ require('../../includes/csrf.php');
 include_once('../../includes/config.php');
 include_once('../../includes/functions.php');
 
-$gwconn = new GatewayConnection();
 
 if (isset($_POST['generate'])) {
     $cnfNetworking = array_diff(scandir(RASPI_CONFIG_NETWORKING, 1), array('..','.','dhcpcd.conf'));
@@ -35,6 +34,7 @@ if (isset($_POST['generate'])) {
     }
 
     if (file_put_contents(RASPI_CONFIG_NETWORKING.'/dhcpcd.conf', $strConfFile)) {
+        $gwconn = new GatewayConnection();
         $gwconn->run_exec_gateway('sudo /bin/cp /etc/raspap/networking/dhcpcd.conf /etc/dhcpcd.conf');
         $output = ['return'=>0,'output'=>'Settings successfully applied'];
     } else {
