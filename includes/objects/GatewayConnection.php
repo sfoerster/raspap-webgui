@@ -3,24 +3,34 @@
 class GatewayConnection {
     var $conn;
     var $port = 22;
+    var $in_container;
 
     function __construct() {
-        $this->conn = ssh2_connect($this->get_ipv4_gateway(),
-                                   $this->port, 
-                                   array('hostkey'=>'ssh-rsa'));
-        
-        if (ssh2_auth_pubkey_file($this->conn, $this->get_user_host()[0],
-                                  '/ssh/id_rsa.pub',
-                                  '/ssh/id_rsa')) {
 
-            echo "SSH authentication successful\n";
-        } else {
-            die("SSH authentication failed\nGateway: ".$this->get_ipv4_gateway()."\nUser: ".$this->get_user_host()[0]);
+        // in container?
+        $this->in_container = file_exists("/.dockerenv");
+
+        if ($this->in_container) {
+            $this->conn = ssh2_connect($this->get_ipv4_gateway(),
+                                       $this->port, 
+                                       array('hostkey'=>'ssh-rsa'));
+            
+            if (ssh2_auth_pubkey_file($this->conn, $this->get_user_host()[0],
+                                      '/ssh/id_rsa.pub',
+                                      '/ssh/id_rsa')) {
+
+                echo "SSH authentication successful\n";
+            } else {
+                die("SSH authentication failed\nGateway: ".$this->get_ipv4_gateway()."\nUser: ".$this->get_user_host()[0]);
+            }
         }
     }
 
     function __destruct() {
-        return ssh2_disconnect($this->conn);
+        if ($this->in_container) {
+            return ssh2_disconnect($this->conn);
+        }
+        return True;
     }
 
     function get_user_host() {
@@ -43,6 +53,11 @@ class GatewayConnection {
     }
 
     function run_shell_gateway($cmd) {
+        // if not in container, straight to shell_exec
+        if (!$this->in_container) {
+            return shell_exec($cmd);
+        }
+
         // initialize out
         $out = '';
 
@@ -65,6 +80,11 @@ class GatewayConnection {
     }
 
     function run_exec_gateway($cmd, &$out=[], &$ret=1) {
+        // if not in container, straight to exec
+        if (!$this->in_container) {
+            return exec($cmd, $out, $ret);
+        }
+        
         // initialize out and err
         if (is_null($out)) {
             $out = [];
