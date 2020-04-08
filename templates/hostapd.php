@@ -4,7 +4,7 @@
     <div class="card-header">
       <div class="row">
         <div class="col">
-          <i class="far fa-dot-circle mr-2"></i><?php echo _("Configure hotspot"); ?>
+          <i class="far fa-dot-circle mr-2"></i><?php echo _("Hotspot"); ?>
         </div>
         <div class="col">
           <button class="btn btn-light btn-icon-split btn-sm service-status float-right">
@@ -82,21 +82,28 @@
           <div class="tab-pane fade" id="security">
             <h4 class="mt-3"><?php echo _("Security settings"); ?></h4>
             <div class="row">
-              <div class="form-group col-md-6">
-                <label for="cbxwpa"><?php echo _("Security type"); ?></label>
-                <?php SelectorOptions('wpa', $arrSecurity, $arrConfig['wpa'], 'cbxwpa'); ?>
-              </div>
-            </div>
-            <div class="row">
-              <div class="form-group col-md-6">
-                <label for="cbxwpapairwise"><?php echo _("Encryption Type"); ?></label>
-                <?php SelectorOptions('wpa_pairwise', $arrEncType, $arrConfig['wpa_pairwise'], 'cbxwpapairwise'); ?>
-              </div>
-            </div>
-            <div class="row">
-              <div class="form-group col-md-6">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="cbxwpa"><?php echo _("Security type"); ?></label>
+                  <?php SelectorOptions('wpa', $arrSecurity, $arrConfig['wpa'], 'cbxwpa'); ?>
+                </div>
+                <div class="form-group">
+                  <label for="cbxwpapairwise"><?php echo _("Encryption Type"); ?></label>
+                  <?php SelectorOptions('wpa_pairwise', $arrEncType, $arrConfig['wpa_pairwise'], 'cbxwpapairwise'); ?>
+                </div>
                 <label for="txtwpapassphrase"><?php echo _("PSK"); ?></label>
-                <input type="text" class="form-control" id="txtwpapassphrase" name="wpa_passphrase" value="<?php echo htmlspecialchars($arrConfig['wpa_passphrase'], ENT_QUOTES); ?>" />
+                <div class="input-group">
+                  <input type="text" class="form-control" id="txtwpapassphrase" name="wpa_passphrase" value="<?php echo htmlspecialchars($arrConfig['wpa_passphrase'], ENT_QUOTES); ?>" />
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="gen_wpa_passphrase"><i class="fas fa-magic"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <figure class="figure">
+                  <img src="/app/img/wifi-qr-code.php" class="figure-img img-fluid" alt="RaspAP Wifi QR code" style="width:100%;">
+                  <figcaption class="figure-caption"><?php echo _("Scan this QR code with your phone to connect to this RaspAP."); ?></figcaption>
+                </figure>
               </div>
             </div>
           </div>
@@ -106,6 +113,7 @@
               <div class="form-group col-md-8">
                 <?php
                 if ($arrHostapdConf['LogEnable'] == 1) {
+                    $GLOBALS['gwconn']->run_exec_gateway('sudo /bin/chmod o+r /tmp/hostapd.log');
                     $log = file_get_contents('/tmp/hostapd.log');
                     echo '<br /><textarea class="logoutput">'.htmlspecialchars($log, ENT_QUOTES).'</textarea>';
                 } else {
@@ -119,47 +127,38 @@
           <h4 class="mt-3"><?php echo _("Advanced settings"); ?></h4>
             <div class="row">
               <div class="col-md-6 mb-2">
-                <div class="checkbox">
-                  <?php
-                  $checkedWifiAPEnabled = '';
-                  if ($arrHostapdConf['WifiAPEnable'] == 1) {
-                      $checkedWifiAPEnabled = ' checked="checked"';
-		  }
-		  if ($managedModeEnabled == false && $arrHostapdConf['WifiAPEnable'] != 1) {
-                      $wifiAPToggle = "disabled";
-		      $wifiAPHelp = "Managed mode not enabled";
-                  }
-                  ?>
-                  <input id="chxwificlientap" name="wifiAPEnable" type="checkbox" data-onstyle="secondary" data-toggle="toggle" data-on="<?php echo _("Enabled"); ?>" data-off="<?php echo _("Disabled"); ?>" data-width="110" data-height="40" value="1"<?php echo $checkedWifiAPEnabled; ?> <?php echo $wifiAPToggle; ?> />
-                  <label class="form-check-label ml-3" for="chxwificlientap"><?php echo _("WiFi client AP mode"); ?></label>
+                <div class="custom-control custom-switch">
+                  <?php $checked = $arrHostapdConf['BridgedEnable'] == 1 ? 'checked="checked"' : '' ?>
+                  <input class="custom-control-input" id="chxbridgedenable" name="bridgedEnable" type="checkbox" value="1" <?php echo $checked ?> />
+                  <label class="custom-control-label" for="chxbridgedenable"><?php echo _("Bridged AP mode"); ?></label>
                 </div>
               </div>
             </div>
             <div class="row">
               <div class="col-md-6 mb-2">
-                <div class="checkbox">
-                <?php
-                $checkedLogEnabled = '';
-                if ($arrHostapdConf['LogEnable'] == 1) {
-                    $checkedLogEnabled = ' checked="checked"';
-		}
-                ?>
-		<input id="chxlogenable" name="logEnable" type="checkbox" data-onstyle="secondary" data-toggle="toggle" data-on="<?php echo _("Enabled"); ?>" data-off="<?php echo _("Disabled"); ?>" data-width="110" data-height="40" value="1"<?php echo $checkedLogEnabled; ?> />
-                <label class="form-check-label ml-3" for="chxlogenable"><?php echo _("Logfile output"); ?></label>
+                <div class="custom-control custom-switch">
+                  <?php $checked = $arrHostapdConf['WifiAPEnable'] == 1 ? 'checked="checked"' : '' ?>
+                  <?php $disabled = $managedModeEnabled == false && $arrHostapdConf['WifiAPEnable'] != 1 || $arrHostapdConf['BridgedEnable'] == 1 ? 'disabled="disabled"' : '' ?>
+                  <input class="custom-control-input" id="chxwificlientap" name="wifiAPEnable" type="checkbox" value="1" <?php echo $checked ?> <?php echo $disabled ?> />
+                  <label class="custom-control-label" for="chxwificlientap"><?php echo _("WiFi client AP mode"); ?></label>
                 </div>
               </div>
             </div>
             <div class="row">
               <div class="col-md-6 mb-2">
-                <div class="checkbox">
-                <?php
-                $checkedHiddenSSID = '';
-                if ($arrConfig['ignore_broadcast_ssid'] == 1 || $arrConfig['ignore_broadcast_ssid'] == 2) {
-                    $checkedHiddenSSID = ' checked="checked"';
-                }
-                ?>
-		  <input id="chxhiddenssid" name="hiddenSSID" type="checkbox" data-onstyle="secondary" data-toggle="toggle" data-on="<?php echo _("Enabled"); ?>" data-off="<?php echo _("Disabled"); ?>" data-width="110" data-height="40" value="1"<?php echo $checkedHiddenSSID; ?> />
-                  <label class="form-check-label ml-3" for="chxhiddenssid"><?php echo _("Hide SSID in broadcast"); ?></label>
+                <div class="custom-control custom-switch">
+                  <?php $checked = $arrHostapdConf['LogEnable'] == 1 ? 'checked="checked"' : '' ?>
+                  <input class="custom-control-input" id="chxlogenable" name="logEnable" type="checkbox" value="1" <?php echo $checked ?> />
+                  <label class="custom-control-label" for="chxlogenable"><?php echo _("Logfile output"); ?></label>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <div class="custom-control custom-switch">
+                  <?php $checked = $arrConfig['ignore_broadcast_ssid'] == 1 || $arrConfig['ignore_broadcast_ssid'] == 2 ? 'checked="checked"' : '' ?>
+                  <input class="custom-control-input" id="chxhiddenssid" name="hiddenSSID" type="checkbox" value="1" <?php echo $checked ?> />
+                  <label class="custom-control-label" for="chxhiddenssid"><?php echo _("Hide SSID in broadcast"); ?></label>
                 </div>
               </div>
             </div>
@@ -167,7 +166,7 @@
               <div class="form-group col-md-6">
                 <label for="max_num_sta"><?php echo _("Maximum number of clients") ?></label>
                 <input type="text" id="max_num_sta" class="form-control" name="max_num_sta" placeholder="2007" value="<?php echo $arrConfig["max_num_sta"] ?>" aria-describedby="max_num_sta_help">
-                <span id="max_num_sta_help" class="help-block"><?php echo _("Configures the max_num_sta option of hostapd. The default and maximum is 2007. If empty or 0, the default applies.") ?></span>
+                <small id="max_num_sta_help" class="text-muted"><?php echo _("Configures the max_num_sta option of hostapd. The default and maximum is 2007. If empty or 0, the default applies.") ?></small>
               </div>
             </div>
             <div class="row">
@@ -446,6 +445,7 @@
                 echo '<input type="submit" class="btn btn-success" name="StartHotspot" value="' . _("Start hotspot") . '"/>' , PHP_EOL;
             } else {
                 echo '<input type="submit" class="btn btn-warning" name="StopHotspot" value="' . _("Stop hotspot") . '"/>' , PHP_EOL;
+                echo '<input type ="submit" class="btn btn-warning" name="RestartHotspot" value="' . _("Restart hotspot") . '"/>' , PHP_EOL;
             };
         endif ?>
       </form>

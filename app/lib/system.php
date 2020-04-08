@@ -1,49 +1,59 @@
 <?php
 
 class System {
-  public function hostname() {
-    return $GLOBALS["gwconn"]->run_shell_gateway("hostname -f");
-  }
-
-  public function uptime() {
-    $uparray = explode(" ", $GLOBALS["gwconn"]->run_exec_gateway("cat /proc/uptime"));
-    $seconds = round($uparray[0], 0);
-    $minutes = $seconds / 60;
-    $hours   = $minutes / 60;
-    $days    = floor($hours / 24);
-    $hours   = floor($hours   - ($days * 24));
-    $minutes = floor($minutes - ($days * 24 * 60) - ($hours * 60));
-    $uptime= '';
-    if ($days    != 0) {
-        $uptime .= $days    . ' day'    . (($days    > 1)? 's ':' ');
-    }
-    if ($hours   != 0) {
-        $uptime .= $hours   . ' hour'   . (($hours   > 1)? 's ':' ');
-    }
-    if ($minutes != 0) {
-        $uptime .= $minutes . ' minute' . (($minutes > 1)? 's ':' ');
+    public function hostname() {
+        return $GLOBALS["gwconn"]->run_exec_gateway("hostname -f");
     }
 
-    return $uptime;
-  }
+    public function uptime() {
+        $uparray = explode(" ", $GLOBALS["gwconn"]->run_exec_gateway("cat /proc/uptime"));
+        $seconds = round($uparray[0], 0);
+        $minutes = $seconds / 60;
+        $hours   = $minutes / 60;
+        $days    = floor($hours / 24);
+        $hours   = floor($hours   - ($days * 24));
+        $minutes = floor($minutes - ($days * 24 * 60) - ($hours * 60));
+        $uptime= '';
+        if ($days    != 0) {
+            $uptime .= $days    . ' day'    . (($days    > 1)? 's ':' ');
+        }
+        if ($hours   != 0) {
+            $uptime .= $hours   . ' hour'   . (($hours   > 1)? 's ':' ');
+        }
+        if ($minutes != 0) {
+            $uptime .= $minutes . ' minute' . (($minutes > 1)? 's ':' ');
+        }
 
-  public function usedMemory() {
-    $used = $GLOBALS["gwconn"]->run_shell_gateway("free -m | awk '/Mem:/ { total=$2 ; used=$3 } END { print used/total*100}'");
-    return floor($used);
-  }
+        return $uptime;
+    }
 
-  public function processorCount() {
-    $procs = $GLOBALS["gwconn"]->run_shell_gateway("nproc --all");
-    return intval($proc);
-  }
+    public function usedMemory() {
+        $used = $GLOBALS["gwconn"]->run_exec_gateway("free -m | awk '/Mem:/ { total=$2 ; used=$3 } END { print used/total*100}'");
+        return floor($used);
+    }
 
-  public function loadAvg1Min() {
-    $load = $GLOBALS["gwconn"]->run_exec_gateway("awk '{print $1}' /proc/loadavg");
-    return floatval($load);
-  }
+    public function processorCount() {
+        $procs = $GLOBALS["gwconn"]->run_exec_gateway("nproc --all");
+        return intval($procs);
+    }
 
-  public function systemLoadPercentage() {
-    return intval(($this->loadAvg1Min() * 100) / $this->processorCount());
-  }
+    public function loadAvg1Min() {
+        $load = $GLOBALS["gwconn"]->run_exec_gateway("awk '{print $1}' /proc/loadavg");
+        return floatval($load);
+    }
+
+    public function systemLoadPercentage() {
+        return intval(($this->loadAvg1Min() * 100) / $this->processorCount());
+    }
+
+    public function systemTemperature() {
+        $cpuTemp = file_get_contents("/sys/class/thermal/thermal_zone0/temp");
+        return number_format((float)$cpuTemp/1000, 1);
+    }
+
+    public function hostapdStatus() {
+        $GLOBALS["gwconn"]->run_exec_gateway('pidof hostapd | wc -l', $status);
+        return $status;
+    }
+
 }
-

@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: 1.2.1\n"
 "Report-Msgid-Bugs-To: Bill Zimmerman <billzimmerman@gmail.com>\n"
 "POT-Creation-Date: 2017-10-19 08:56+0000\n"
-"PO-Revision-Date: 2018-05-17 17:15+0000\n"
+"PO-Revision-Date: 2020-03-29 00:05+0000\n"
 "Last-Translator: Bill Zimmerman <billzimmerman@gmail.com>\n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -31,26 +31,26 @@ msgstr "RaspAP Wifi Portal"
 msgid "Dashboard"
 msgstr "Dashboard"
 
-msgid "Configure WiFi client"
-msgstr "Configure WiFi client"
+msgid "WiFi client"
+msgstr "WiFi client"
 
-msgid "Configure hotspot"
-msgstr "Configure hotspot"
+msgid "Hotspot"
+msgstr "Hotspot"
 
-msgid "Configure networking"
-msgstr "Configure networking"
+msgid "Networking"
+msgstr "Networking"
 
-msgid "Configure DHCP Server"
-msgstr "Configure DHCP Server"
+msgid "DHCP Server"
+msgstr "DHCP Server"
 
-msgid "Configure OpenVPN"
-msgstr "Configure OpenVPN"
+msgid "OpenVPN"
+msgstr "OpenVPN"
 
-msgid "Configure TOR proxy"
-msgstr "Configure TOR proxy"
+msgid "TOR proxy"
+msgstr "TOR proxy"
 
-msgid "Configure Auth"
-msgstr "Configure Auth"
+msgid "Authentication"
+msgstr "Authentication"
 
 msgid "Change Theme"
 msgstr "Change Theme"
@@ -320,6 +320,33 @@ msgstr "Dnsmasq is running"
 msgid "Dnsmasq is not running"
 msgstr "Dnsmasq is not running"
 
+msgid "Upstream DNS servers"
+msgstr "Upstream DNS servers"
+
+msgid "Only ever query DNS servers configured below"
+msgstr "Only ever query DNS servers configured below"
+
+msgid "Enable this option if you want RaspAP to <b>send DNS queries to the servers configured below exclusively</b>. By default RaspAP also uses its upstream DHCP server's name servers."
+msgstr "Enable this option if you want RaspAP to <b>send DNS queries to the servers configured below exclusively</b>. By default RaspAP also uses its upstream DHCP server's name servers."
+
+msgid "This option adds <code>no-resolv</code> to the dnsmasq configuration."
+msgstr "This option adds <code>no-resolv</code> to the dnsmasq configuration."
+
+msgid "Add upstream DNS server"
+msgstr "Add upstream DNS server"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "Choose a hosted server"
+msgstr "Choose a hosted server"
+
+msgid "Log DHCP requests"
+msgstr "Log DHCP requests"
+
+msgid "Log DNS queries"
+msgstr "Log DNS queries"
+
 #: includes/hostapd.php
 msgid "Basic"
 msgstr "Basic"
@@ -390,6 +417,9 @@ msgstr "Start hotspot"
 msgid "Stop hotspot"
 msgstr "Stop hotspot"
 
+msgid "Restart hotspot"
+msgstr "Restart hotspot"
+
 msgid "Enable logging"
 msgstr "Enable logging"
 
@@ -398,6 +428,9 @@ msgstr "Logfile output"
 
 msgid "WiFi client AP mode"
 msgstr "WiFi client AP mode"
+
+msgid "Bridged AP mode"
+msgstr "Bridged AP mode"
 
 msgid "Hide SSID in broadcast"
 msgstr "Hide SSID in broadcast"
@@ -630,6 +663,10 @@ msgstr "Attempting to start TOR"
 msgid "Attempting to stop TOR"
 msgstr "Attempting to stop TOR"
 
+#: template/dashboard.php
+msgid "Bridged AP mode is enabled. For Hostname and IP, see your router's admin page."
+msgstr "Bridged AP mode is enabled. For Hostname and IP, see your router's admin page."
+
 #: common form controls
 msgid "Save settings"
 msgstr "Save settings"
@@ -651,3 +688,48 @@ msgstr "up"
 
 msgid "down"
 msgstr "down"
+
+#: includes/adblock.php
+
+msgid "adblock"
+msgstr "adblock"
+
+msgid "Ad Blocking"
+msgstr "Ad Blocking"
+
+msgid "Start Ad Blocking"
+msgstr "Start Ad Blocking"
+
+msgid "Restart Ad Blocking"
+msgstr "Restart Ad Blocking"
+
+msgid "Blocklist settings"
+msgstr "Blocklist settings"
+
+msgid "Enable blocklists"
+msgstr "Enable blocklists"
+
+msgid "Enable this option if you want RaspAP to <b>block DNS requests for ads, tracking and other virtual garbage</b>. Blocklists are gathered from multiple, actively maintained sources and automatically updated, cleaned, optimized and moderated on a daily basis."
+msgstr "Enable this option if you want RaspAP to <b>block DNS requests for ads, tracking and other virtual garbage</b>. Blocklists are gathered from multiple, actively maintained sources and automatically updated, cleaned, optimized and moderated on a daily basis."
+
+msgid "This option adds <code>conf-file</code> and <code>addn-hosts</code> to the dnsmasq configuration."
+msgstr "This option adds <code>conf-file</code> and <code>addn-hosts</code> to the dnsmasq configuration."
+
+msgid "Choose a blocklist provider"
+msgstr "Choose a blocklist provider"
+
+msgid "Hostnames blocklist last updated"
+msgstr "Hostnames blocklist last updated"
+
+msgid "Domains blocklist last updated"
+msgstr "Domains blocklist last updated"
+
+msgid "Update now"
+msgstr "Update now"
+
+msgid "Statistics"
+msgstr "Statistics"
+
+msgid "Information provided by adblock"
+msgstr "Information provided by adblock"
+

@@ -1,9 +1,11 @@
 <?php
 
+require_once 'config.php';
+
 /**
-* Show dashboard page.
-*/
-function DisplayDashboard()
+ * Show dashboard page.
+ */
+function DisplayDashboard(&$extraFooterScripts)
 {
 
     $status = new StatusMessages();
@@ -103,7 +105,7 @@ function DisplayDashboard()
 
     if (!preg_match('/SSID: ([^ ]{1,'.SSIDMAXLEN.'})/', $stdoutIwWRepSpaces, $matchesSSID)) {
         $wlanHasLink = false;
-        $matchesSSID[1] = 'Not connected';
+        $matchesSSID[1] = 'None';
     }
 
     $connectedSSID = $matchesSSID[1];
@@ -147,62 +149,67 @@ function DisplayDashboard()
     }
 
 
-    if (isset($_POST['ifdown_wlan0'])) {
-        // Pressed stop button
-        if ($interfaceState === 'UP') {
-            $status->addMessage(sprintf(_('Interface is going %s.'), _('down')), 'warning');
-            $GLOBALS['gwconn']->run_exec_gateway('sudo ip link set '.RASPI_WIFI_CLIENT_INTERFACE.' down');
-            $wlan0up = false;
-            $status->addMessage(sprintf(_('Interface is now %s.'), _('down')), 'success');
-        } elseif ($interfaceState === 'unknown') {
-            $status->addMessage(_('Interface state unknown.'), 'danger');
+    if (!RASPI_MONITOR_ENABLED) {
+        if (isset($_POST['ifdown_wlan0'])) {
+            // Pressed stop button
+            if ($interfaceState === 'UP') {
+                $status->addMessage(sprintf(_('Interface is going %s.'), _('down')), 'warning');
+                $GLOBALS["gwconn"]->run_exec_gateway('sudo ip link set '.RASPI_WIFI_CLIENT_INTERFACE.' down');
+                $wlan0up = false;
+                $status->addMessage(sprintf(_('Interface is now %s.'), _('down')), 'success');
+            } elseif ($interfaceState === 'unknown') {
+                $status->addMessage(_('Interface state unknown.'), 'danger');
+            } else {
+                $status->addMessage(sprintf(_('Interface already %s.'), _('down')), 'warning');
+            }
+        } elseif (isset($_POST['ifup_wlan0'])) {
+            // Pressed start button
+            if ($interfaceState === 'DOWN') {
+                $status->addMessage(sprintf(_('Interface is going %s.'), _('up')), 'warning');
+                $GLOBALS["gwconn"]->run_exec_gateway('sudo ip link set ' . RASPI_WIFI_CLIENT_INTERFACE . ' up');
+                $GLOBALS["gwconn"]->run_exec_gateway('sudo ip -s a f label ' . RASPI_WIFI_CLIENT_INTERFACE);
+                $wlan0up = true;
+                $status->addMessage(sprintf(_('Interface is now %s.'), _('up')), 'success');
+            } elseif ($interfaceState === 'unknown') {
+                $status->addMessage(_('Interface state unknown.'), 'danger');
+            } else {
+                $status->addMessage(sprintf(_('Interface already %s.'), _('up')), 'warning');
+            }
         } else {
-            $status->addMessage(sprintf(_('Interface already %s.'), _('down')), 'warning');
+            $status->addMessage(sprintf(_('Interface is %s.'), strtolower($interfaceState)), $classMsgDevicestatus);
         }
-    } elseif (isset($_POST['ifup_wlan0'])) {
-        // Pressed start button
-        if ($interfaceState === 'DOWN') {
-            $status->addMessage(sprintf(_('Interface is going %s.'), _('up')), 'warning');
-            $GLOBALS['gwconn']->run_exec_gateway('sudo ip link set ' . RASPI_WIFI_CLIENT_INTERFACE . ' up');
-            $GLOBALS['gwconn']->run_exec_gateway('sudo ip -s a f label ' . RASPI_WIFI_CLIENT_INTERFACE);
-            $wlan0up = true;
-            $status->addMessage(sprintf(_('Interface is now %s.'), _('up')), 'success');
-        } elseif ($interfaceState === 'unknown') {
-            $status->addMessage(_('Interface state unknown.'), 'danger');
-        } else {
-            $status->addMessage(sprintf(_('Interface already %s.'), _('up')), 'warning');
-        }
-    } else {
-        $status->addMessage(sprintf(_('Interface is %s.'), strtolower($interfaceState)), $classMsgDevicestatus);
     }
 
-    echo renderTemplate("dashboard", compact(
-        "status",
-        "ipv4Addrs",
-        "ipv4Netmasks",
-        "ipv6Addrs",
-        "macAddr",
-        "strRxPackets",
-        "strRxBytes",
-        "strTxPackets",
-        "strTxBytes",
-        "connectedSSID",
-        "connectedBSSID",
-        "bitrate",
-        "signalLevel",
-        "txPower",
-        "frequency",
-        "strLinkQuality",
-        "wlan0up"
-    ));
+    echo renderTemplate(
+        "dashboard", compact(
+            "status",
+            "ipv4Addrs",
+            "ipv4Netmasks",
+            "ipv6Addrs",
+            "macAddr",
+            "strRxPackets",
+            "strRxBytes",
+            "strTxPackets",
+            "strTxBytes",
+            "connectedSSID",
+            "connectedBSSID",
+            "bitrate",
+            "signalLevel",
+            "txPower",
+            "frequency",
+            "strLinkQuality",
+            "wlan0up"
+        )
+    );
+    $extraFooterScripts[] = array('src'=>'app/js/dashboardchart.js', 'defer'=>false);
 }
 
 
 /**
  * Get a human readable data size string from a number of bytes.
  *
- * @param long $numbytes   The number of bytes.
- * @param int  $precision  The number of numbers to round to after the dot/comma.
+ * @param  long $numbytes  The number of bytes.
+ * @param  int  $precision The number of numbers to round to after the dot/comma.
  * @return string Data size in units: PB, TB, GB, MB or KB otherwise an empty string.
  */
 function getHumanReadableDatasize($numbytes, $precision = 2)

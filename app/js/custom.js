@@ -143,6 +143,57 @@ $(document).on("submit", ".js-dhcp-settings-form", function(e) {
     $(".js-add-dhcp-static-lease").trigger("click");
 });
 
+$(document).on("click", ".js-add-dhcp-upstream-server", function(e) {
+    e.preventDefault();
+
+    var field = $("#add-dhcp-upstream-server-field")
+    var row = $("#dhcp-upstream-server").html().replace("{{ server }}", field.val())
+
+    if (field.val().trim() == "") { return }
+
+    $(".js-dhcp-upstream-servers").append(row)
+
+    field.val("")
+});
+
+$(document).on("click", ".js-remove-dhcp-upstream-server", function(e) {
+    e.preventDefault();
+    $(this).parents(".js-dhcp-upstream-server").remove();
+});
+
+$(document).on("submit", ".js-dhcp-settings-form", function(e) {
+    $(".js-add-dhcp-upstream-server").trigger("click");
+});
+
+/**
+ * mark a form field, e.g. a select box, with the class `.js-field-preset`
+ * and give it an attribute `data-field-preset-target` with a text field's
+ * css selector.
+ *
+ * now, if the element marked `.js-field-preset` receives a `change` event,
+ * its value will be copied to all elements matching the selector in
+ * data-field-preset-target.
+ */
+$(document).on("change", ".js-field-preset", function(e) {
+    var selector = this.getAttribute("data-field-preset-target")
+    var value = "" + this.value
+    var syncValue = function(el) { el.value = value }
+
+    if (value.trim() === "") { return }
+
+    document.querySelectorAll(selector).forEach(syncValue)
+});
+
+$(document).on("click", "#gen_wpa_passphrase", function(e) {
+    $('#txtwpapassphrase').val(genPassword(63));
+});
+
+function genPassword(pwdLen) {
+    var pwdChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    var rndPass = Array(pwdLen).fill(pwdChars).map(function(x) { return x[Math.floor(Math.random() * x.length)] }).join('');
+    return rndPass;
+}
+
 function setupBtns() {
     $('#btnSummaryRefresh').click(function(){getAllInterfaces();});
     $('.intsave').click(function(){
@@ -240,6 +291,28 @@ function loadChannelSelect(selected) {
     });
 }
 
+/* Updates the selected blocklist
+ * Request is passed to an ajax handler to download the associated list.
+ * Interface elements are updated to indicate current progress, status.
+ */
+function updateBlocklist() {
+    var blocklist_id = $('#cbxblocklist').val();
+    if (blocklist_id == '') { return; }
+    $('#cbxblocklist-status').find('i').removeClass('fas fa-check').addClass('fas fa-cog fa-spin');
+    $('#cbxblocklist-status').removeClass('check-hidden').addClass('check-progress');
+    $.post('ajax/adblock/update_blocklist.php',{ 'blocklist_id':blocklist_id },function(data){
+        var jsonData = JSON.parse(data);
+        if (jsonData['return'] == '0') {
+            $('#cbxblocklist-status').find('i').removeClass('fas fa-cog fa-spin').addClass('fas fa-check');
+            $('#cbxblocklist-status').removeClass('check-progress').addClass('check-updated').delay(500).animate({ opacity: 1 }, 700);
+            $('#'+blocklist_id).text("Just now");
+        }
+    })
+}
+
+function clearBlocklistStatus() {
+    $('#cbxblocklist-status').removeClass('check-updated').addClass('check-hidden');
+}
 // Static Array method
 Array.range = (start, end) => Array.from({length: (end - start)}, (v, k) => k + start);
 
@@ -305,7 +378,7 @@ function getCookie(cname) {
 var themes = {
     "default": "custom.css",
     "hackernews" : "hackernews.css",
-    "terminal" : "terminal.css",
+    "lightsout" : "lightsout.css",
 }
 
 // Toggles the sidebar navigation.

@@ -1,13 +1,11 @@
 <?php
 
-include_once('includes/status_messages.php');
-include_once('app/lib/system.php');
+require_once 'includes/status_messages.php';
+require_once 'config.php';
 
 /**
- *
  * Find the version of the Raspberry Pi
  * Currently only used for the system information page but may useful elsewhere
- *
  */
 
 function RPiVersion()
@@ -65,7 +63,6 @@ function DisplaySystem()
 {
 
     $status = new StatusMessages();
-    $system = new System();
 
     if (isset($_POST['SaveLanguage'])) {
         if (isset($_POST['locale'])) {
@@ -74,25 +71,34 @@ function DisplaySystem()
         }
     }
 
-    if (isset($_POST['SaveServerPort'])) {
-        if (isset($_POST['serverPort'])) {
-            if (strlen($_POST['serverPort']) > 4 || !is_numeric($_POST['serverPort'])) {
-                $status->addMessage('Invalid value for port number', 'danger');
-            } else {
-                $serverPort = escapeshellarg($_POST['serverPort']);
-                $GLOBALS["gwconn"]->run_exec_gateway("sudo /etc/raspap/lighttpd/configport.sh $serverPort " .RASPI_LIGHTTPD_CONFIG. " ".$_SERVER['SERVER_NAME'], $return);
-                foreach ($return as $line) {
-                    $status->addMessage($line, 'info');
+    if (!RASPI_MONITOR_ENABLED) {
+        if (isset($_POST['SaveServerPort'])) {
+            if (isset($_POST['serverPort'])) {
+                if (strlen($_POST['serverPort']) > 4 || !is_numeric($_POST['serverPort'])) {
+                    $status->addMessage('Invalid value for port number', 'danger');
+                } else {
+                    $serverPort = escapeshellarg($_POST['serverPort']);
+                    $GLOBALS["gwconn"]->run_exec_gateway("sudo /etc/raspap/lighttpd/configport.sh $serverPort " .RASPI_LIGHTTPD_CONFIG. " ".$_SERVER['SERVER_NAME'], $return);
+                    foreach ($return as $line) {
+                        $status->addMessage($line, 'info');
+                    }
                 }
             }
+        }
+        if (isset($_POST['system_reboot'])) {
+            $status->addMessage("System Rebooting Now!", "warning", false);
+            $result = $GLOBALS["gwconn"]->run_exec_gateway("sudo /sbin/reboot");
+        }
+        if (isset($_POST['system_shutdown'])) {
+            $status->addMessage("System Shutting Down Now!", "warning", false);
+            $result = $GLOBALS["gwconn"]->run_exec_gateway("sudo /sbin/shutdown -h now");
         }
     }
 
     if (isset($_POST['RestartLighttpd'])) {
-        $status->addMessage('Restarting lighttpd in 3 seconds...','info');
+        $status->addMessage('Restarting lighttpd in 3 seconds...', 'info');
         $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/lighttpd/configport.sh --restart');
     }
-
     $GLOBALS["gwconn"]->run_exec_gateway('cat '. RASPI_LIGHTTPD_CONFIG, $return);
     $conf = ParseConfig($return);
     $ServerPort = $conf['server.port'];
@@ -116,17 +122,9 @@ function DisplaySystem()
         'es_MX.UTF-8' => 'Español',
         'fi_FI.UTF-8' => 'Finnish',
         'si_LK.UTF-8' => 'Sinhala',
-        'tr_TR.UTF-8' => 'Türkçe'
+        'tr_TR.UTF-8' => 'Türkçe',
+        'el_GR.UTF-8' => 'Ελληνικά'
     );
-
-    if (isset($_POST['system_reboot'])) {
-        $status->addMessage("System Rebooting Now!", "warning", false);
-        $result = $GLOBALS["gwconn"]->run_shell_gateway("sudo /sbin/reboot");
-    }
-    if (isset($_POST['system_shutdown'])) {
-        $status->addMessage("System Shutting Down Now!", "warning", false);
-        $result = $GLOBALS["gwconn"]->run_shell_gateway("sudo /sbin/shutdown -h now");
-    }
 
     echo renderTemplate("system", compact("arrLocales", "status", "system", "ServerPort"));
 }

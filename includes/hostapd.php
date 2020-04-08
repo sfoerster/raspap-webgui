@@ -1,15 +1,17 @@
 <?php
 
-include_once('includes/status_messages.php');
+require_once 'includes/status_messages.php';
+require_once 'app/lib/system.php';
+require_once 'config.php';
 
 /**
-*
-*
-*/
+ *
+ *
+ */
 function DisplayHostAPDConfig()
 {
     $status = new StatusMessages();
-    $arrHostapdConf = parse_ini_file('/etc/raspap/hostapd.ini');
+    $system = new System();
     $arrConfig = array();
     $arr80211Standard = [
         'a' => '802.11a - 5 GHz',
@@ -17,39 +19,48 @@ function DisplayHostAPDConfig()
         'g' => '802.11g - 2.4 GHz',
         'n' => '802.11n - 2.4 GHz',
         'ac' => '802.11.ac - 5 GHz'
-   ];
+    ];
     $arrSecurity = array(1 => 'WPA', 2 => 'WPA2', 3 => 'WPA+WPA2', 'none' => _("None"));
     $arrEncType = array('TKIP' => 'TKIP', 'CCMP' => 'CCMP', 'TKIP CCMP' => 'TKIP+CCMP');
     $managedModeEnabled = false;
     $GLOBALS["gwconn"]->run_exec_gateway("ip -o link show | awk -F': ' '{print $2}'", $interfaces);
 
-    if (isset($_POST['SaveHostAPDSettings'])) {
-        SaveHostAPDConfig($arrSecurity, $arrEncType, $arr80211Standard, $interfaces, $status);
-    } elseif (isset($_POST['StartHotspot'])) {
-        $status->addMessage('Attempting to start hotspot', 'info');
-        if ($arrHostapdConf['WifiAPEnable'] == 1) {
-            $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/servicestart.sh --interface uap0 --seconds 3', $return);
-        } else {
-            $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/servicestart.sh --seconds 5', $return);
+    if (!RASPI_MONITOR_ENABLED) {
+        if (isset($_POST['SaveHostAPDSettings'])) {
+            SaveHostAPDConfig($arrSecurity, $arrEncType, $arr80211Standard, $interfaces, $status);
         }
-        foreach ($return as $line) {
-            $status->addMessage($line, 'info');
-        }
-    } elseif (isset($_POST['StopHotspot'])) {
-        $status->addMessage('Attempting to stop hotspot', 'info');
-        $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl stop hostapd.service', $return);
-        foreach ($return as $line) {
-            $status->addMessage($line, 'info');
+    }
+
+    $arrHostapdConf = parse_ini_file('/etc/raspap/hostapd.ini');
+
+    if (!RASPI_MONITOR_ENABLED) {
+         if (isset($_POST['StartHotspot']) || isset($_POST['RestartHotspot'])) {
+            $status->addMessage('Attempting to start hotspot', 'info');
+            if ($arrHostapdConf['BridgedEnable'] == 1) {
+                $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/servicestart.sh --interface br0 --seconds 3', $return);
+            } elseif ($arrHostapdConf['WifiAPEnable'] == 1) {
+                $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/servicestart.sh --interface uap0 --seconds 3', $return);
+            } else {
+                $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/servicestart.sh --seconds 3', $return);
+            }
+            foreach ($return as $line) {
+                $status->addMessage($line, 'info');
+            }
+        } elseif (isset($_POST['StopHotspot'])) {
+            $status->addMessage('Attempting to stop hotspot', 'info');
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl stop hostapd.service', $return);
+            foreach ($return as $line) {
+                $status->addMessage($line, 'info');
+            }
         }
     }
 
     $GLOBALS["gwconn"]->run_exec_gateway('cat '. RASPI_HOSTAPD_CONFIG, $hostapdconfig);
-    $GLOBALS["gwconn"]->run_exec_gateway('pidof hostapd | wc -l', $hostapdstatus);
     $GLOBALS["gwconn"]->run_exec_gateway('iwgetid '. RASPI_WIFI_CLIENT_INTERFACE. ' -r', $wifiNetworkID);
-    if ( !empty($wifiNetworkID[0])) {
+    if (!empty($wifiNetworkID[0])) {
         $managedModeEnabled = true;
     }
-
+    $hostapdstatus = $system->hostapdStatus();
     $serviceStatus = $hostapdstatus[0] == 0 ? "down" : "up";
 
     foreach ($hostapdconfig as $hostapdconfigline) {
@@ -58,33 +69,36 @@ function DisplayHostAPDConfig()
         }
 
         if ($hostapdconfigline[0] != "#") {
-            $arrLine = explode("=", $hostapdconfigline) ;
+            $arrLine = explode("=", $hostapdconfigline);
             $arrConfig[$arrLine[0]]=$arrLine[1];
         }
     };
 
-    echo renderTemplate("hostapd", compact(
-        "status",
-        "serviceStatus",
-        "hostapdstatus",
-        "managedModeEnabled",
-        "interfaces",
-        "arrConfig",
-        "arr80211Standard",
-        "selectedHwMode",
-        "arrSecurity",
-        "arrEncType",
-        "arrHostapdConf"
-    ));
+    echo renderTemplate(
+        "hostapd", compact(
+            "status",
+            "serviceStatus",
+            "hostapdstatus",
+            "managedModeEnabled",
+            "interfaces",
+            "arrConfig",
+            "arr80211Standard",
+            "selectedHwMode",
+            "arrSecurity",
+            "arrEncType",
+            "arrHostapdConf"
+        )
+    );
 }
 
 function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
 {
     // It should not be possible to send bad data for these fields so clearly
     // someone is up to something if they fail. Fail silently.
-    if (!(array_key_exists($_POST['wpa'], $wpa_array) &&
-      array_key_exists($_POST['wpa_pairwise'], $enc_types) &&
-      array_key_exists($_POST['hw_mode'], $modes))) {
+    if (!(array_key_exists($_POST['wpa'], $wpa_array) 
+        && array_key_exists($_POST['wpa_pairwise'], $enc_types) 
+        && array_key_exists($_POST['hw_mode'], $modes))
+    ) {
         error_log("Attempting to set hostapd config with wpa='".$_POST['wpa']."', wpa_pairwise='".$_POST['wpa_pairwise']."' and hw_mode='".$_POST['hw_mode']."'");  // FIXME: log injection
         return false;
     }
@@ -101,15 +115,29 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
 
     $good_input = true;
   
-    // Check for WiFi client AP mode checkbox
-    $wifiAPEnable = 0;
-    if ($arrHostapdConf['WifiAPEnable'] == 0) {
-        if (isset($_POST['wifiAPEnable'])) {
-            $wifiAPEnable = 1;
+    // Check for Bridged AP mode checkbox
+    $bridgedEnable = 0;
+    if ($arrHostapdConf['BridgedEnable'] == 0) {
+        if (isset($_POST['bridgedEnable'])) {
+            $bridgedEnable = 1;
         }
     } else {
-        if (isset($_POST['wifiAPEnable'])) {
-            $wifiAPEnable = 1;
+        if (isset($_POST['bridgedEnable'])) {
+            $bridgedEnable = 1;
+        }
+    }
+
+    // Check for WiFi client AP mode checkbox
+    $wifiAPEnable = 0;
+    if ($bridgedEnable == 0) {  // enable client mode actions when not bridged
+        if ($arrHostapdConf['WifiAPEnable'] == 0) {
+            if (isset($_POST['wifiAPEnable'])) {
+                $wifiAPEnable = 1;
+            }
+        } else {
+            if (isset($_POST['wifiAPEnable'])) {
+                $wifiAPEnable = 1;
+            }
         }
     }
 
@@ -130,9 +158,13 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
             $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/hostapd/disablelog.sh');
         }
     }
+
     $cfg = [];
     $cfg['LogEnable'] = $logEnable;
-    $cfg['WifiAPEnable'] = $wifiAPEnable;
+    // Save previous Client mode status when Bridged
+    $cfg['WifiAPEnable'] = ($bridgedEnable == 1 ?
+        $arrHostapdConf['WifiAPEnable'] : $wifiAPEnable);
+    $cfg['BridgedEnable'] = $bridgedEnable;
     $cfg['WifiManaged'] = RASPI_WIFI_CLIENT_INTERFACE;
     write_php_ini($cfg, '/etc/raspap/hostapd.ini');
 
@@ -143,8 +175,9 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
         $good_input = false;
     }
 
-    if ($_POST['wpa'] !== 'none' &&
-      (strlen($_POST['wpa_passphrase']) < 8 || strlen($_POST['wpa_passphrase']) > 63)) {
+    if ($_POST['wpa'] !== 'none' 
+        && (strlen($_POST['wpa_passphrase']) < 8 || strlen($_POST['wpa_passphrase']) > 63)
+    ) {
         $status->addMessage('WPA passphrase must be between 8 and 63 characters', 'danger');
         $good_input = false;
     }
@@ -218,6 +251,9 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
         }
         if ($wifiAPEnable == 1) {
             $config.= 'interface=uap0'.PHP_EOL;
+        } elseif ($bridgedEnable == 1) {
+            $config.='interface='.RASPI_WIFI_CLIENT_INTERFACE.PHP_EOL;
+            $config.= 'bridge=br0'.PHP_EOL;
         } else {
             $config.= 'interface='.$_POST['interface'].PHP_EOL;
         }
@@ -241,7 +277,7 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
             $dhcp_range = ($dhcpConfig['dhcp-range'] =='10.3.141.50,10.3.141.255,255.255.255.0,12h' ||
                 $dhcpConfig['dhcp-range'] =='') ? '192.168.50.50,192.168.50.150,12h' : $dhcpConfig['dhcp-range'];
             $config = 'interface=lo,uap0               # Enable uap0 interface for wireless client AP mode'.PHP_EOL;
-            $config.= 'bind-interfaces                 # Bind to the interfaces'.PHP_EOL;
+            $config.= 'bind-dynamic                    # Hybrid between --bind-interfaces and default'.PHP_EOL;
             $config.= 'server=8.8.8.8                  # Forward DNS requests to Google DNS'.PHP_EOL;
             $config.= 'domain-needed                   # Don\'t forward short names'.PHP_EOL;
             $config.= 'bogus-priv                      # Never forward addresses in the non-routed address spaces'.PHP_EOL;
@@ -268,33 +304,38 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
         $domain_name_server = ($intConfig['domain_name_server'] =='') ? '1.1.1.1 8.8.8.8' : $intConfig['domain_name_server'];
         $routers = ($intConfig['routers'] == '') ? '10.3.141.1' : $intConfig['routers'];
 
-        if ($wifiAPEnable == 1) {
+        $config = [ '# RaspAP wlan0 configuration' ];
+        $config[] = 'hostname';
+        $config[] = 'clientid';
+        $config[] = 'persistent';
+        $config[] = 'option rapid_commit';
+        $config[] = 'option domain_name_servers, domain_name, domain_search, host_name';
+        $config[] = 'option classless_static_routes';
+        $config[] = 'option ntp_servers';
+        $config[] = 'require dhcp_server_identifier';
+        $config[] = 'slaac private';
+        $config[] = 'nohook lookup-hostname';
+
+        if ($bridgedEnable == 1) {
+            $config[] = 'denyinterfaces eth0 wlan0';
+            $config[] = 'interface br0';
+        } elseif ($wifiAPEnable == 1) {
             // Enable uap0 configuration in dhcpcd for Wifi client AP mode
             $intConfig = parse_ini_file(RASPI_CONFIG_NETWORKING.'/uap0.ini', false, INI_SCANNER_RAW);
             $ip_address = ($intConfig['ip_address'] == '') ? '192.168.50.1/24' : $intConfig['ip_address'];
-            $config = PHP_EOL.'# RaspAP uap0 configuration'.PHP_EOL;
-            $config.= 'interface uap0'.PHP_EOL;
-            $config.= 'static ip_address='.$ip_address.PHP_EOL;
-            $config.= 'nohook wpa_supplicant'.PHP_EOL;
+            $config[] = 'interface uap0';
+            $config[] = 'static ip_address='.$ip_address;
+            $config[] = 'nohook wpa_supplicant';
         } else {
             // Default config
             $ip_address = ($intConfig['ip_address'] == '') ? '10.3.141.1/24' : $intConfig['ip_address'];
-            $config = '# RaspAP wlan0 configuration'.PHP_EOL;
-            $config.= 'hostname'.PHP_EOL;
-            $config.= 'clientid'.PHP_EOL;
-            $config.= 'persistent'.PHP_EOL;
-            $config.= 'option rapid_commit'.PHP_EOL;
-            $config.= 'option domain_name_servers, domain_name, domain_search, host_name'.PHP_EOL;
-            $config.= 'option classless_static_routes'.PHP_EOL;
-            $config.= 'option ntp_servers'.PHP_EOL;
-            $config.= 'require dhcp_server_identifier'.PHP_EOL;
-            $config.= 'slaac private'.PHP_EOL;
-            $config.= 'nohook lookup-hostname'.PHP_EOL;
-            $config.= 'interface '.RASPI_WIFI_CLIENT_INTERFACE.PHP_EOL;
-            $config.= 'static ip_address='.$ip_address.PHP_EOL;
-            $config.= 'static routers='.$routers.PHP_EOL;
-            $config.= 'static domain_name_server='.$domain_name_server.PHP_EOL;
+            $config[] = 'interface '.RASPI_WIFI_CLIENT_INTERFACE;
+            $config[] = 'static ip_address='.$ip_address;
+            $config[] = 'static routers='.$routers;
+            $config[] = 'static domain_name_server='.$domain_name_server;
         }
+
+        $config = join(PHP_EOL, $config);
         file_put_contents("/tmp/dhcpddata", $config);
         system('sudo cp /tmp/dhcpddata '.RASPI_DHCPCD_CONFIG, $return);
 

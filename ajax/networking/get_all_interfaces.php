@@ -1,7 +1,6 @@
 <?php
 
-require('../../includes/csrf.php');
-include_once('../../includes/functions.php');
+require '../../includes/csrf.php';
 
 $gwconn = new GatewayConnection();
 

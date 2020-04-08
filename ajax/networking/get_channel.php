@@ -1,16 +1,17 @@
 <?php
 
-require('../../includes/csrf.php');
-include_once('../../includes/config.php');
+require '../../includes/csrf.php';
+require_once '../../includes/config.php';
 
-exec('cat '. RASPI_HOSTAPD_CONFIG, $hostapdconfig);
+$gwconn = new GatewayConnection();
+$gwconn->run_exec_gateway('cat '. RASPI_HOSTAPD_CONFIG, $hostapdconfig);
 $arrConfig = array();
 
 foreach ($hostapdconfig as $hostapdconfigline) {
     if (strlen($hostapdconfigline) === 0) {
         continue;
     }
-    $arrLine = explode("=", $hostapdconfigline) ;
+    $arrLine = explode("=", $hostapdconfigline);
     $arrConfig[$arrLine[0]]=$arrLine[1];
 };
 $channel = intval($arrConfig['channel']);

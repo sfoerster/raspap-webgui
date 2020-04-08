@@ -1,11 +1,11 @@
 <?php
 
 if (!defined('RASPI_CONFIG')) {
-  define('RASPI_CONFIG', '/etc/raspap');
+    define('RASPI_CONFIG', '/etc/raspap');
 }
 
 $defaults = [
-  'RASPI_VERSION' => '2.1',
+  'RASPI_VERSION' => '2.3.1',
   'RASPI_CONFIG_NETWORKING' => RASPI_CONFIG.'/networking',
   'RASPI_ADMIN_DETAILS' => RASPI_CONFIG.'/raspap.auth',
   'RASPI_WIFI_CLIENT_INTERFACE' => 'wlan0',
@@ -13,8 +13,10 @@ $defaults = [
 
   // Constants for configuration file paths.
   // These are typical for default RPi installs. Modify if needed.
-  'RASPI_DNSMASQ_CONFIG' => '/etc/dnsmasq.conf',
+  'RASPI_DNSMASQ_CONFIG' => '/etc/dnsmasq.d/090_raspap.conf',
   'RASPI_DNSMASQ_LEASES' => '/var/lib/misc/dnsmasq.leases',
+  'RASPI_ADBLOCK_LISTPATH' => '/etc/raspap/adblock/',
+  'RASPI_ADBLOCK_CONFIG' => '/etc/dnsmasq.d/090_adblock.conf',
   'RASPI_HOSTAPD_CONFIG' => '/etc/hostapd/hostapd.conf',
   'RASPI_DHCPCD_CONFIG' => '/etc/dhcpcd.conf',
   'RASPI_WPA_SUPPLICANT_CONFIG' => '/etc/wpa_supplicant/wpa_supplicant.conf',
@@ -31,6 +33,7 @@ $defaults = [
   'RASPI_HOTSPOT_ENABLED' => true,
   'RASPI_NETWORK_ENABLED' => true,
   'RASPI_DHCP_ENABLED' => true,
+  'RASPI_ADBLOCK_ENABLED' => false,
   'RASPI_OPENVPN_ENABLED' => false,
   'RASPI_TORPROXY_ENABLED' => false,
   'RASPI_CONFAUTH_ENABLED' => true,
@@ -45,9 +48,9 @@ $defaults = [
 ];
 
 foreach ($defaults as $setting => $value) {
-  if (!defined($setting)) {
-    define($setting, $value);
-  }
+    if (!defined($setting)) {
+        define($setting, $value);
+    }
 }
 
 unset($defaults);

@@ -1,34 +1,37 @@
 <?php
 
-include_once('includes/status_messages.php');
+require_once 'includes/status_messages.php';
+require_once 'config.php';
 
 /**
- *
  * Manage OpenVPN configuration
- *
  */
 function DisplayOpenVPNConfig()
 {
     $status = new StatusMessages();
-    if (isset($_POST['SaveOpenVPNSettings'])) {
-        if (isset($_POST['authUser'])) {
-            $authUser = strip_tags(trim($_POST['authUser']));
-        }
-        if (isset($_POST['authPassword'])) {
-            $authPassword = strip_tags(trim($_POST['authPassword']));
-        }
-        $return = SaveOpenVPNConfig($status, $_FILES['customFile'], $authUser, $authPassword);
-    } elseif (isset($_POST['StartOpenVPN'])) {
-        $status->addMessage('Attempting to start OpenVPN', 'info');
-        $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl start openvpn-client@client', $return);
-        foreach ($return as $line) {
-            $status->addMessage($line, 'info');
-        }
-    } elseif (isset($_POST['StopOpenVPN'])) {
-        $status->addMessage('Attempting to stop OpenVPN', 'info');
-        $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl stop openvpn-client@client', $return);
-        foreach ($return as $line) {
-            $status->addMessage($line, 'info');
+    if (!RASPI_MONITOR_ENABLED) {
+        if (isset($_POST['SaveOpenVPNSettings'])) {
+            if (isset($_POST['authUser'])) {
+                $authUser = strip_tags(trim($_POST['authUser']));
+            }
+            if (isset($_POST['authPassword'])) {
+                $authPassword = strip_tags(trim($_POST['authPassword']));
+            }
+            $return = SaveOpenVPNConfig($status, $_FILES['customFile'], $authUser, $authPassword);
+        } elseif (isset($_POST['StartOpenVPN'])) {
+            $status->addMessage('Attempting to start OpenVPN', 'info');
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl start openvpn-client@client', $return);
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl enable openvpn-client@client', $return);
+            foreach ($return as $line) {
+                $status->addMessage($line, 'info');
+            }
+        } elseif (isset($_POST['StopOpenVPN'])) {
+            $status->addMessage('Attempting to stop OpenVPN', 'info');
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl stop openvpn-client@client', $return);
+            $GLOBALS["gwconn"]->run_exec_gateway('sudo /bin/systemctl disable openvpn-client@client', $return);
+            foreach ($return as $line) {
+                $status->addMessage($line, 'info');
+            }
         }
     }
 
@@ -45,26 +48,27 @@ function DisplayOpenVPNConfig()
         $authPassword = $auth[1];
     }
 
-    echo renderTemplate("openvpn", compact(
-        "status",
-        "serviceStatus",
-        "openvpnstatus",
-        "public_ip",
-        "authUser",
-        "authPassword"
-    ));
+    echo renderTemplate(
+        "openvpn", compact(
+            "status",
+            "serviceStatus",
+            "openvpnstatus",
+            "public_ip",
+            "authUser",
+            "authPassword"
+        )
+    );
 }
 
 /**
- *
  * Validates uploaded .ovpn file, adds auth-user-pass and
  * stores auth credentials in login.conf. Copies files from
  * tmp to OpenVPN
  *
- * @param object $status
- * @param object $file
- * @param string $authUser
- * @param string $authPassword
+ * @param  object $status
+ * @param  object $file
+ * @param  string $authUser
+ * @param  string $authPassword
  * @return object $status
  */
 function SaveOpenVPNConfig($status, $file, $authUser, $authPassword)
@@ -81,15 +85,15 @@ function SaveOpenVPNConfig($status, $file, $authUser, $authPassword)
 
         // Parse returned errors
         switch ($file['error']) {
-            case UPLOAD_ERR_OK:
-                break;
-            case UPLOAD_ERR_NO_FILE:
-                throw new RuntimeException('OpenVPN configuration file not sent');
-            case UPLOAD_ERR_INI_SIZE:
-            case UPLOAD_ERR_FORM_SIZE:
-                throw new RuntimeException('Exceeded filesize limit');
-            default:
-                throw new RuntimeException('Unknown errors');
+        case UPLOAD_ERR_OK:
+            break;
+        case UPLOAD_ERR_NO_FILE:
+            throw new RuntimeException('OpenVPN configuration file not sent');
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+            throw new RuntimeException('Exceeded filesize limit');
+        default:
+            throw new RuntimeException('Unknown errors');
         }
 
         // Validate extension
@@ -106,7 +110,8 @@ function SaveOpenVPNConfig($status, $file, $authUser, $authPassword)
                 'ovpn' => 'text/plain'
             ),
             true
-        )) {
+        )
+        ) {
             throw new RuntimeException('Invalid file format');
         }
 
@@ -124,7 +129,8 @@ function SaveOpenVPNConfig($status, $file, $authUser, $authPassword)
                 'ovpnclient',
                 $ext
             )
-        )) {
+        )
+        ) {
             throw new RuntimeException('Unable to move uploaded file');
         }
         // Good file upload, update auth credentials if present
