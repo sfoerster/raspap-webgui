@@ -78,10 +78,11 @@ function DisplaySystem()
                     $status->addMessage('Invalid value for port number', 'danger');
                 } else {
                     $serverPort = escapeshellarg($_POST['serverPort']);
-                    $GLOBALS["gwconn"]->run_exec_gateway("sudo /etc/raspap/lighttpd/configport.sh $serverPort " .RASPI_LIGHTTPD_CONFIG. " ".$_SERVER['SERVER_NAME'], $return);
-                    foreach ($return as $line) {
-                        $status->addMessage($line, 'info');
-                    }
+                    //$GLOBALS["gwconn"]->run_exec_gateway("sudo /etc/raspap/lighttpd/configport.sh $serverPort " .RASPI_LIGHTTPD_CONFIG. " ".$_SERVER['SERVER_NAME'], $return);
+                    $status->addMessage('Cannot set lighttpd port', 'info');
+                    //foreach ($return as $line) {
+                    //    $status->addMessage($line, 'info');
+                    //}
                 }
             }
         }
@@ -96,8 +97,9 @@ function DisplaySystem()
     }
 
     if (isset($_POST['RestartLighttpd'])) {
-        $status->addMessage('Restarting lighttpd in 3 seconds...', 'info');
-        $GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/lighttpd/configport.sh --restart');
+        //$status->addMessage('Restarting lighttpd in 3 seconds...', 'info');
+        $status->addMessage('Cannot restart lighttpd', 'info');
+        //$GLOBALS["gwconn"]->run_exec_gateway('sudo /etc/raspap/lighttpd/configport.sh --restart');
     }
     $GLOBALS["gwconn"]->run_exec_gateway('cat '. RASPI_LIGHTTPD_CONFIG, $return);
     $conf = ParseConfig($return);
