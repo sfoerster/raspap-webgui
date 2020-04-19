@@ -1,8 +1,16 @@
 #!/bin/bash
 
+set -e
+
+WIFI_IFACE=$(ls /sys/class/ieee80211/*/device/net/ | awk 'NR==1{print $1}')
+
+if [ -z "$WIFI_IFACE" ]; then
+    echo "No wifi interface found. Exiting."
+    exit 0;
+fi
+
 RASPAP_VOL=/opt/mistborn_volumes/extra/raspap/etc-raspap
 TMP_DIR=/tmp/mistborn-raspap
-WIFI_IFACE=$(ls /sys/class/ieee80211/*/device/net/ | awk 'NR==1{print $1}')
 
 # install on gateway
 sudo apt-get install -y hostapd vnstat
