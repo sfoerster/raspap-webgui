@@ -14,6 +14,11 @@ fi
 RASPAP_VOL=/etc/raspap
 TMP_DIR=/var/www/html
 
+if [ "$DISTRO" == "ubuntu" ]; then
+    sudo apt-get install -y software-properties-common
+    sudo add-apt-repository -y ppa:ondrej/php
+fi
+
 # install on gateway
 sudo apt-get install -y hostapd vnstat dnsmasq
 
