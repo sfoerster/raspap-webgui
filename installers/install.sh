@@ -53,6 +53,11 @@ sudo cat /etc/dhcpcd.conf | sudo tee -a $RASPAP_VOL/networking/defaults > /dev/n
 # copy files from raspap repo
 sudo rm -rf $TMP_DIR
 sudo git clone https://github.com/sfoerster/raspap-webgui.git -b $(git symbolic-ref --short HEAD || echo "master") $TMP_DIR
+
+# sudoers
+sudo cp $TMP_DIR/installers/raspap.sudoers /etc/sudoers.d/090_raspap
+
+# raspap
 sudo cp $TMP_DIR/raspap.php $RASPAP_VOL
 sudo sed -i "s/wlan0/$WIFI_IFACE/g" $RASPAP_VOL/raspap.php
 
