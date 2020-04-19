@@ -17,6 +17,14 @@ TMP_DIR=/var/www/html
 # install on gateway
 sudo apt-get install -y hostapd vnstat dnsmasq
 
+# front-end
+sudo apt-get install -y lighttpd iptables-persistent qrencode php7.3-cgi
+
+# lighttpd
+sudo lighttpd-enable-mod fastcgi-php
+sudo service lighttpd force-reload
+sudo systemctl restart lighttpd.service
+
 # stop conflicting dns
 sudo systemctl stop systemd-resolved || true
 sudo systemctl disable systemd-resolved || true
@@ -86,6 +94,8 @@ sudo sysctl -p /etc/sysctl.d/90_raspap.conf
 sudo /etc/init.d/procps restart
 
 # iptables
+sudo iptables -t nat -D POSTROUTING -j MASQUERADE || true
+sudo iptables -t nat -D POSTROUTING -s 192.168.50.0/24 ! -d 192.168.50.0/24 -j MASQUERADE || true
 sudo iptables -t nat -A POSTROUTING -j MASQUERADE
 sudo iptables -t nat -A POSTROUTING -s 192.168.50.0/24 ! -d 192.168.50.0/24 -j MASQUERADE
 sudo iptables-save | sudo tee /etc/iptables/rules.v4
