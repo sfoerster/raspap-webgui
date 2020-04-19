@@ -26,7 +26,7 @@ sudo apt-get install -y hostapd vnstat dnsmasq
 sudo apt-get install -y lighttpd iptables-persistent qrencode php7.3-cgi
 
 # lighttpd
-sudo lighttpd-enable-mod fastcgi-php
+sudo lighttpd-enable-mod fastcgi-php || true
 sudo service lighttpd force-reload
 sudo systemctl restart lighttpd.service
 
