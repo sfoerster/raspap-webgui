@@ -15,7 +15,14 @@ RASPAP_VOL=/etc/raspap
 TMP_DIR=/var/www/html
 
 # install on gateway
-sudo apt-get install -y hostapd vnstat
+sudo apt-get install -y hostapd vnstat dnsmasq
+
+# stop conflicting dns
+sudo systemctl stop systemd-resolved || true
+sudo systemctl disable systemd-resolved || true
+
+# restart dnsmasq
+sudo systemctl restart dnsmasq
 
 # install dhcp server on Ubuntu, Debian, etc. (just not Raspbian)
 if [ ! "$DISTRO" == "raspbian" ]; then
@@ -31,7 +38,8 @@ sudo mkdir -p $RASPAP_VOL/lighttpd
 sudo cat /etc/dhcpcd.conf | sudo tee -a $RASPAP_VOL/networking/defaults > /dev/null
 
 # copy files from raspap repo
-sudo git clone https://github.com/sfoerster/raspap-webgui.git -b raspap_container $TMP_DIR
+sudo rm -rf $TMP_DIR
+sudo git clone https://github.com/sfoerster/raspap-webgui.git -b $(git symbolic-ref --short HEAD || echo "master") $TMP_DIR
 sudo cp $TMP_DIR/raspap.php $RASPAP_VOL
 sudo sed -i "s/wlan0/$WIFI_IFACE/g" $RASPAP_VOL/raspap.php
 
@@ -53,8 +61,8 @@ sudo mv $TMP_DIR/installers/raspapd.service /lib/systemd/system
 sudo systemctl daemon-reload
 sudo systemctl enable raspapd.service
 
-sudo mv /etc/default/hostapd ~/default_hostapd.old
-sudo cp /etc/hostapd/hostapd.conf ~/hostapd.conf.old
+sudo mv /etc/default/hostapd ~/default_hostapd.old || true
+sudo cp /etc/hostapd/hostapd.conf ~/hostapd.conf.old || true
 
 sudo cp $TMP_DIR/config/default_hostapd /etc/default/hostapd
 sudo cp $TMP_DIR/config/hostapd.conf /etc/hostapd/hostapd.conf
