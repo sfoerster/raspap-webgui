@@ -9,8 +9,10 @@ if [ -z "$WIFI_IFACE" ]; then
     exit 0;
 fi
 
-RASPAP_VOL=/opt/mistborn_volumes/extra/raspap/etc-raspap
-TMP_DIR=/tmp/mistborn-raspap
+#RASPAP_VOL=/opt/mistborn_volumes/extra/raspap/etc-raspap
+#TMP_DIR=/tmp/mistborn-raspap
+RASPAP_VOL=/etc/raspap
+TMP_DIR=/var/www/html
 
 # install on gateway
 sudo apt-get install -y hostapd vnstat
@@ -24,7 +26,7 @@ sudo mkdir -p $RASPAP_VOL
 sudo mkdir -p $RASPAP_VOL/backups
 sudo mkdir -p $RASPAP_VOL/networking
 sudo mkdir -p $RASPAP_VOL/hostapd
-#sudo mkdir -p $RASPAP_VOL/lighttpd
+sudo mkdir -p $RASPAP_VOL/lighttpd
 
 sudo cat /etc/dhcpcd.conf | sudo tee -a $RASPAP_VOL/networking/defaults > /dev/null
 
@@ -34,7 +36,7 @@ sudo cp $TMP_DIR/raspap.php $RASPAP_VOL
 sudo sed -i "s/wlan0/$WIFI_IFACE/g" $RASPAP_VOL/raspap.php
 
 # permissions
-sudo chown -R www-data:www-data /var/www/html
+sudo chown -R www-data:www-data $TMP_DIR
 sudo chown -R www-data:www-data /etc/raspap
 
 sudo mv $TMP_DIR/installers/*log.sh $RASPAP_VOL/hostapd
@@ -61,8 +63,8 @@ sudo cp $TMP_DIR/config/dnsmasq.conf /etc/dnsmasq.d/090_raspap.conf
 sudo sed -i "s/wlan0/$WIFI_IFACE/g" /etc/dnsmasq.d/090_raspap.conf
 sudo cp $TMP_DIR/config/dhcpcd.conf /etc/dhcpcd.conf
 sudo sed -i "s/wlan0/$WIFI_IFACE/g" /etc/dhcpcd.conf
-sudo cp config/config.php /var/www/html/includes/
-sudo sed -i "s/wlan0/$WIFI_IFACE/g" /var/www/html/includes/config.php
+sudo cp config/config.php $TMP_DIR/includes/
+sudo sed -i "s/wlan0/$WIFI_IFACE/g" $TMP_DIR/includes/config.php
 
 # systemd-networkd
 sudo systemctl stop systemd-networkd || true
